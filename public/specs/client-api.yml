@@ -6,7 +6,7 @@ info:
 servers:
   - url: https://dev-api.ola-digital-int.com
     description: Staging Environment
-  - url: https://prod-api.ola-digital-int.com
+  - url: https://api.ola-digital-int.com
     description: Production Environment
 paths:
   /auth/tennant/login:
