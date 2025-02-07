@@ -1,0 +1,352 @@
+openapi: 3.0.0
+info:
+  title: Ola Digital API
+  description: API documentation for tenant authentication.
+  version: 1.0.0
+servers:
+  - url: https://dev-api.ola-digital-int.com
+    description: Staging Environment
+  - url: https://prod-api.ola-digital-int.com
+    description: Production Environment
+paths:
+  /auth/tennant/login:
+    post:
+      summary: Tenant Authentication
+      description: Authenticates a tenant and returns an authentication token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - auth_token
+                - secret_token
+              properties:
+                auth_token:
+                  type: string
+                  description: The authentication token for the tenant.
+                secret_token:
+                  type: string
+                  description: The secret token for the tenant.
+      responses:
+        "200":
+          description: Successful authentication.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Token active."
+                  token:
+                    type: string
+                    description: The authentication token, valid for 30 minutes.
+        "400":
+          description: Invalid authentication credentials.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Invalid secret token."
+      security:
+        - ApiKeyAuth: []
+  /api-v2/validate-token:
+    get:
+      summary: Validate Token
+      description: Validates an authentication token.
+      parameters:
+        - in: header
+          name: X-Access-Token
+          required: true
+          schema:
+            type: string
+          description: The authentication token to be validated.
+      responses:
+        "200":
+          description: Token is valid.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Token is valid."
+        "403":
+          description: Token is expired or invalid.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Token is expired."
+  /api-v2/telehealth/schedules/get-provider-schedules/FL/service/{sheet_number}/{ServiceId}:
+    get:
+      summary: Get Provider Schedules
+      description: Retrieves available provider schedules.
+      parameters:
+        - in: path
+          name: sheet_number
+          required: true
+          schema:
+            type: string
+          description: Sheet number identifier.
+        - in: path
+          name: ServiceId
+          required: true
+          schema:
+            type: string
+          description: The service ID.
+        - in: header
+          name: X-Access-Token
+          required: true
+          schema:
+            type: string
+          description: The authentication token.
+      responses:
+        "200":
+          description: Schedules retrieved successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Schedules Retrieved Successfully."
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        schedule_date:
+                          type: string
+                          format: date
+                          example: "2024-07-24"
+                        start_datetime:
+                          type: string
+                          format: date-time
+                          example: "2024-07-24T21:15:00.000Z"
+                        end_datetime:
+                          type: string
+                          format: date-time
+                          example: "2024-07-24T21:30:00.000Z"
+                        provider_guid:
+                          type: string
+                          example: "7efa59e3-fc64-42eb-8a3f-daa07026ac7c"
+                        appt_length:
+                          type: integer
+                          example: 15
+                        provider_details:
+                          type: object
+                          properties:
+                            first_name:
+                              type: string
+                              example: "Rahul"
+                            last_name:
+                              type: string
+                              example: "Sharma"
+                            user_avatar:
+                              type: string
+                              format: uri
+                              example: "https://olamd-staging-operations-bucket.s3.amazonaws.com/images/users/3990/ced81e0a-664c-47a9-b193-25209357d928.jpg"
+        "403":
+          description: Unauthorized access.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Unauthorized access."
+  /api-v2/telehealth/service/new-schedule-request:
+    post:
+      summary: Create New Schedule Request
+      description: Creates a new schedule request for telehealth services.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                user_data:
+                  type: object
+                address:
+                  type: array
+                  items:
+                    type: object
+                service_data:
+                  type: object
+                identifier:
+                  type: object
+                transaction_id:
+                  type: string
+                pharmacyDetails:
+                  type: object
+                schedule:
+                  type: object
+                file_1:
+                  type: string
+                  format: binary
+                file_2:
+                  type: string
+                  format: binary
+                file_3:
+                  type: string
+                  format: binary
+                file_4:
+                  type: string
+                  format: binary
+                file_5:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Provider schedule created successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Provider schedule created successfully."
+                  data:
+                    type: string
+                  user_guid:
+                    type: string
+        "403":
+          description: Invalid or missing token.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Token is expired."
+  /api-v2/telehealth/service/orders/{order_guid}:
+    get:
+      summary: Get Schedule Appointment Details
+      description: Retrieves details of a scheduled appointment using the order GUID.
+      parameters:
+        - in: path
+          name: order_guid
+          required: true
+          schema:
+            type: string
+          description: Unique identifier for the appointment order.
+        - in: header
+          name: X-Access-Token
+          required: true
+          schema:
+            type: string
+          description: The authentication token.
+      responses:
+        "200":
+          description: Schedule details retrieved successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Request transactions retrieved successfully."
+                  data:
+                    type: object
+        "404":
+          description: The order with the given GUID was not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "The order with the given GUID was not found."
+  /api-v2/telehealth/user/update-profile/{user_uuid}:
+    put:
+      summary: Update User Profile
+      description: Updates the profile of a user with the specified user UUID.
+      parameters:
+        - in: path
+          name: user_uuid
+          required: true
+          schema:
+            type: string
+          description: Unique identifier for the user.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                first_name:
+                  type: string
+                last_name:
+                  type: string
+                dob:
+                  type: string
+                gender:
+                  type: string
+                phone:
+                  type: string
+                address:
+                  type: object
+      responses:
+        "200":
+          description: User profile updated successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "User profile updated successfully."
