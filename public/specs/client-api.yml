@@ -1,18 +1,48 @@
 openapi: 3.0.0
 info:
-  title: Ola Digital API
-  description: API documentation for tenant authentication.
+  title: Ola Portal API
+  description: API documentation Ola Portal
   version: 1.0.0
 servers:
   - url: https://dev-api.ola-digital-int.com
     description: Staging Environment
-  - url: https://api.ola-digital-int.com
-    description: Production Environment
+    
+tags:
+  - name: Authentication
+    description: |
+      Public endpoints used for generating authentication tokens for secured APIs 
+      and validating existing tokens.
+  
+  - name: Provider
+    description: |
+      Public endpoints for provider-related operations, including authentication 
+      and token validation for accessing secured APIs.
+
+  - name: Consult
+    description: |
+      Public endpoints related to consultations, including authentication 
+      and token validation for secured API access.
+
+  - name: Patient
+    description: |
+      Public endpoints for patient-related operations, including authentication 
+      and token validation for secured APIs.
+
+  - name: Pharmacy
+    description: |
+      Public endpoints for pharmacy-related operations, including authentication 
+      and token validation for secured APIs.
+
+
+
+
 paths:
   /auth/tennant/login:
     post:
       summary: Tenant Authentication
-      description: Authenticates a tenant and returns an authentication token.
+      tags:
+        - Authentication
+      description: "*Authenticates a tenant and returns an authentication token.*"
       requestBody:
         required: true
         content:
@@ -26,9 +56,11 @@ paths:
                 auth_token:
                   type: string
                   description: The authentication token for the tenant.
+                  example: be7cc902-xxxx-xxxx-xxxx-ced77ae1501a
                 secret_token:
                   type: string
                   description: The secret token for the tenant.
+                  example: ead307a1-xxxx-xxxx-xxxx-4da01f24be3c
       responses:
         "200":
           description: Successful authentication.
@@ -42,10 +74,11 @@ paths:
                     example: true
                   message:
                     type: string
-                    example: "Token active."
+                    example: Token active.
                   token:
                     type: string
                     description: The authentication token, valid for 30 minutes.
+                    example: eyJ0RAiOiJKV1QiLCJh…
         "400":
           description: Invalid authentication credentials.
           content:
@@ -58,20 +91,16 @@ paths:
                     example: false
                   message:
                     type: string
-                    example: "Invalid secret token."
-      security:
-        - ApiKeyAuth: []
+                    example: Invalid secret token.
+
   /api-v2/validate-token:
     get:
       summary: Validate Token
-      description: Validates an authentication token.
-      parameters:
-        - in: header
-          name: X-Access-Token
-          required: true
-          schema:
-            type: string
-          description: The authentication token to be validated.
+      tags:
+        - Authentication
+      description: "*Validates an authentication token.*"
+      security:
+        - X-Access-Token: []   # The custom x-access-token security Scheme
       responses:
         "200":
           description: Token is valid.
@@ -85,7 +114,7 @@ paths:
                     example: true
                   message:
                     type: string
-                    example: "Token is valid."
+                    example: Token is valid.
         "403":
           description: Token is expired or invalid.
           content:
@@ -98,12 +127,22 @@ paths:
                     example: false
                   message:
                     type: string
-                    example: "Token is expired."
-  /api-v2/telehealth/schedules/get-provider-schedules/FL/service/{sheet_number}/{ServiceId}:
+                    example: Token is expired.
+  /api-v2/telehealth/schedules/get-provider-schedules/{state}/service/{sheet_number}/{ServiceId}:
     get:
       summary: Get Provider Schedules
+      tags:
+        - Provider 
       description: Retrieves available provider schedules.
+      security:
+        - X-Access-Token: []
       parameters:
+        - in: path
+          name: state
+          required: true
+          schema:
+            type: string
+          description: Provide your state.
         - in: path
           name: sheet_number
           required: true
@@ -116,12 +155,6 @@ paths:
           schema:
             type: string
           description: The service ID.
-        - in: header
-          name: X-Access-Token
-          required: true
-          schema:
-            type: string
-          description: The authentication token.
       responses:
         "200":
           description: Schedules retrieved successfully.
@@ -135,7 +168,7 @@ paths:
                     example: true
                   message:
                     type: string
-                    example: "Schedules Retrieved Successfully."
+                    example: Schedules Retrieved Successfully
                   data:
                     type: array
                     items:
@@ -184,11 +217,15 @@ paths:
                     example: false
                   message:
                     type: string
-                    example: "Unauthorized access."
+                    example: Unauthorized access.   
   /api-v2/telehealth/service/new-schedule-request:
     post:
-      summary: Create New Schedule Request
+      summary: Create New Appointment
+      tags:
+        - Consult
       description: Creates a new schedule request for telehealth services.
+      security:
+        - X-Access-Token: []
       requestBody:
         required: true
         content:
@@ -197,21 +234,36 @@ paths:
               type: object
               properties:
                 user_data:
-                  type: object
+                  type: string
+                  description: JSON stringified user data
+                  example: '{"first_name": "FIRST_NAME", "last_name": "LAST_NAME", "gender": "male/female", "dob": "1998-02-12", "email": "EMAIL_ADDRESS", "phone": "+1234567890", "role": "USER", "sub_role": "", "release_medical": false, "tennant": "body_good_studio"}'
                 address:
-                  type: array
-                  items:
-                    type: object
+                  type: string
+                  description: JSON stringified address array
+                  example: '[{"use": "home", "text": "STREET CITYCITY STATE_CODE ZIPCODE", "street1": "STREET", "city": "CITY", "state": "FL", "postalCode": "ZIPCODE", "line": ["STREET", "CITY", "FL", "ZIPCODE"], "type": "both"}]'
                 service_data:
-                  type: object
+                  type: string
+                  description: JSON stringified service questions/answers
+                  example: '{"question_answer":[{"question_text":"Test Dummy question","answer":"Mild","other_text":"Test chronic pain"}]}'
                 identifier:
-                  type: object
+                  type: string
+                  description: JSON stringified identifier data
+                  example: '{"service": "weight-loss-semaglutide-injection-advanta-rx", "sessionType": "initial", "tennant": "body_good_studio", "scheduleType": "subscription / one-time"}'
                 transaction_id:
                   type: string
+                  example: "UNIQUE_TRANSACTIONS_ID"
                 pharmacyDetails:
-                  type: object
+                  type: string
+                  description: JSON stringified pharmacy info
+                  example: '{"pharmacy_name": "Test Pharmacy", "pharmacy_address": "Test Address", "pharmacy_phone": "+1234567890", "pharmacy_fax": "+1234567890", "pharmacy_ncpdp_id": "000000"}'
                 schedule:
-                  type: object
+                  type: string
+                  description: JSON stringified schedule object
+                  example: '{"schedule_start_date": "2023-10-18T15:00:00.000Z", "schedule_end_date": "2023-10-18T15:15:00.000Z", "provider_guid": "f5f144de-a138-4be5-9dfd-e4d940dc729b"}'
+                user_insurance:
+                  type: string
+                  description: JSON stringified insurance data
+                  example: '{"insurance_member_id":"123TEST123", "insurance_plan_name":"test_plan_name", "payer_identification":"TEST", "cover_type":"Primary"}'
                 file_1:
                   type: string
                   format: binary
@@ -240,11 +292,19 @@ paths:
                     example: true
                   message:
                     type: string
-                    example: "Provider schedule created successfully."
+                    example: "Provider schedule created successfully"
                   data:
                     type: string
+                    example: "f57956b3-xxxx-xxx-xxxx-xxxxxxxxx"
                   user_guid:
                     type: string
+                    example: "f57956b3-xxxx-xxx-xxxx-xxxxxxxxx"
+                  redirectUrl:
+                    type: string
+                    example: "A url for next steps"
+                  popupMsg:
+                    type: string
+                    example: " Message to display user"
         "403":
           description: Invalid or missing token.
           content:
@@ -257,24 +317,22 @@ paths:
                     example: false
                   message:
                     type: string
-                    example: "Token is expired."
+                    example: "Token is expired."  
   /api-v2/telehealth/service/orders/{order_guid}:
     get:
       summary: Get Schedule Appointment Details
+      tags:
+        - Consult
       description: Retrieves details of a scheduled appointment using the order GUID.
+      security:
+        - X-Access-Token: []
       parameters:
-        - in: path
-          name: order_guid
+        - name: order_guid
+          in: path
           required: true
           schema:
             type: string
           description: Unique identifier for the appointment order.
-        - in: header
-          name: X-Access-Token
-          required: true
-          schema:
-            type: string
-          description: The authentication token.
       responses:
         "200":
           description: Schedule details retrieved successfully.
@@ -288,9 +346,236 @@ paths:
                     example: true
                   message:
                     type: string
-                    example: "Request transactions retrieved successfully."
-                  data:
+                    example: Request transactions retrived successfully.
+                  result:
                     type: object
+                    properties:
+                      order_guid:
+                        type: string
+                      id:
+                        type: integer
+                      service_type:
+                        type: string
+                      pharmacy_name:
+                        type: string
+                      pharmacy_address:
+                        type: string
+                      pharmacy_phone:
+                        type: string
+                      created_at:
+                        type: string
+                        format: date-time
+                      updated_at:
+                        type: string
+                        format: date-time
+                      status:
+                        type: string
+                      cancellation_reason:
+                        type: string
+                        nullable: true
+                      service:
+                        type: object
+                        properties:
+                          service_name:
+                            type: string
+                      your_answer:
+                        type: array
+                        items: {}
+                      your_answers:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            question_text:
+                              type: string
+                            answer:
+                              type: string
+                            other_text:
+                              type: string
+                      provider:
+                        type: object
+                        properties:
+                          first_name:
+                            type: string
+                          last_name:
+                            type: string
+                          user_avatar:
+                            type: string
+                            format: uri
+                            nullable: true
+                          dob:
+                            type: string
+                            format: date
+                            nullable: true
+                          name:
+                            type: string
+                          user_guid:
+                           type: string  
+                          email:
+                            type: string
+                          email_2:
+                            type: string
+                            nullable: true
+                          gender:
+                            type: string
+                          phone:
+                            type: string
+                          user_detail:
+                            type: object
+                            properties:
+                              data:
+                                type: object
+                                properties:
+                                  title:
+                                    type: string
+                                  npi:
+                                    type: string
+                                  website:
+                                    type: string
+                                  liability:
+                                    type: string
+                                  bio:
+                                    type: string
+                                  specialties:
+                                    type: array
+                                    items:
+                                      type: object
+                                      properties:
+                                        actor:
+                                          type: string
+                                        uid:
+                                          type: string
+                                        name:
+                                          type: string
+                                        description:
+                                          type: string
+                                        category:
+                                          type: string
+                                        actors:
+                                          type: string
+                                  clinic:
+                                    type: object
+                                    additionalProperties: true
+                                  practices:
+                                    type: array
+                                    items: {}
+                                  licenses:
+                                    type: array
+                                    items:
+                                      type: object
+                                      properties:
+                                        state:
+                                          type: string
+                                        number:
+                                          type: string
+                                        end_date:
+                                          type: string
+                                          format: date-time
+                                  otherInformation:
+                                    type: object
+                                    properties:
+                                      mci:
+                                        type: string
+                                      registrationNumber:
+                                        type: string
+                                      yearOfRegistration:
+                                        type: string
+                                  dea:
+                                    type: string
+                      patient:
+                        type: object
+                        properties:
+                          first_name:
+                            type: string
+                          last_name:
+                            type: string
+                          user_avatar:
+                            type: string
+                            format: uri
+                            nullable: true
+                          dob:
+                            type: string
+                            format: date
+                          name:
+                            type: string
+                          user_guid:
+                            type: string
+                          email:
+                            type: string
+                          email_2:
+                            type: string
+                          gender:
+                            type: string
+                          phone:
+                            type: string
+                          user_detail:
+                            type: object
+                            properties:
+                              address:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    use:
+                                      type: string
+                                    text:
+                                      type: string
+                                    street1:
+                                      type: string
+                                    city:
+                                      type: string
+                                    state:
+                                      type: string
+                                    postalCode:
+                                      type: string
+                                    line:
+                                      type: array
+                                      items:
+                                        type: string
+                                    type:
+                                      type: string
+                          user_insurance:
+                            type: array
+                            items: {}
+                      scheduled:
+                        type: object
+                        additionalProperties: true
+                      prescriptions:
+                        type: array
+                        items: {}
+                      consult_notes:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            icd_code:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  code:
+                                    type: string
+                                  description:
+                                    type: string
+                            cpt_code:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  code:
+                                    type: string
+                                  description:
+                                    type: string
+                                  short_description:
+                                    type: string
+                            subjective:
+                              type: string
+                            objective:
+                              type: string
+                            assessment:
+                              type: string
+                            plan:
+                              type: string
         "404":
           description: The order with the given GUID was not found.
           content:
@@ -303,11 +588,15 @@ paths:
                     example: false
                   message:
                     type: string
-                    example: "The order with the given GUID was not found."
+                    example: The order with the given GUID was not found. 
   /api-v2/telehealth/user/update-profile/{user_uuid}:
     put:
       summary: Update User Profile
+      tags:
+        - Patient
       description: Updates the profile of a user with the specified user UUID.
+      security:
+        - X-Access-Token: []
       parameters:
         - in: path
           name: user_uuid
@@ -324,18 +613,42 @@ paths:
               properties:
                 email:
                   type: string
+                  format: email
+                  example: "test.update.profile@yopmail.com" 
                 first_name:
                   type: string
+                  example: "Test"
                 last_name:
                   type: string
+                  example: "Update Profile"
                 dob:
                   type: string
+                  format: date
+                  example: "1999-11-10"
                 gender:
                   type: string
+                  example: male/female
                 phone:
                   type: string
+                  example: "+12269989245"
                 address:
                   type: object
+                  properties:
+                    street1:
+                      type: string
+                      example: "13 street" 
+                    street2:
+                      type: string
+                      example: ""
+                    city:
+                      type: string
+                      example: "Tampa"
+                    state:
+                      type: string
+                      example: "FL" 
+                    postalCode:
+                      type: string
+                      example: "33610" 
       responses:
         "200":
           description: User profile updated successfully.
@@ -349,9 +662,135 @@ paths:
                     example: true
                   message:
                     type: string
-                    example: "User profile updated successfully."
-security:
-  - bearerAuth: []
-  - basicAuth: []
-  - apiKeyQuery: []
-  - apiKeyHeader: []
+                    example: User profile updated successfully.   
+  /api-v2/telehealth/search-pharmacy-dosepot:
+    get:
+      summary: Search for pharmacy information by name and ZIP code or by NCPDP ID
+      tags:
+        - Pharmacy
+      description: |
+        Retrieves pharmacy information using either:
+
+        1. `pharmacy_name` (min 3 characters) and `zip_code`, **or**
+        2. `pharmacy_ncpdp_id` (a 7-digit NCPDP Provider ID).
+
+        At least one method of search must be provided. If both are provided, NCPDP ID takes priority.
+      security:
+        - X-Access-Token: []
+      parameters:
+        - in: query
+          name: pharmacy_name
+          schema:
+            type: string
+            minLength: 3
+          description: Name of the pharmacy (minimum 3 characters). Required if NCPDP ID is not provided.
+        - in: query
+          name: zip_code
+          schema:
+            type: string
+          description: ZIP code to narrow the search. Required if pharmacy_name is used.
+        - in: query
+          name: pharmacy_ncpdp_id
+          schema:
+            type: string
+            pattern: '^[0-9]{7}$'
+          description: 7-digit NCPDP Provider Identification Number. If provided, it overrides name/ZIP search.
+      responses:
+        "200":
+          description: Pharmacy fetched successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Pharmacy fetched successfully
+                  count:
+                    type: integer
+                    example: 1
+                  result:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        PharmacyId:
+                          type: integer
+                          example: 3
+                        StoreName:
+                          type: string
+                          example: QS/1 PA TEST PHARMACY
+                        Address1:
+                          type: string
+                          example: 110 SOUTH MAIN STREET
+                        Address2:
+                          type: string
+                          example: ""
+                        City:
+                          type: string
+                          example: MOORES
+                        State:
+                          type: string
+                          example: SC
+                        ZipCode:
+                          type: string
+                          example: "29303"
+                        PrimaryPhone:
+                          type: string
+                          example: "8002223333"
+                        PrimaryPhoneType:
+                          type: string
+                          example: Work
+                        PrimaryFax:
+                          type: string
+                          example: "8001134321"
+                        PhoneAdditional1:
+                          type: string
+                          nullable: true
+                          example: null
+                        PhoneAdditionalType1:
+                          type: string
+                          example: Undefined
+                        PhoneAdditional2:
+                          type: string
+                          nullable: true
+                          example: null
+                        PhoneAdditionalType2:
+                          type: string
+                          example: Undefined
+                        PhoneAdditional3:
+                          type: string
+                          nullable: true
+                          example: null
+                        PhoneAdditionalType3:
+                          type: string
+                          example: Undefined
+                        PharmacySpecialties:
+                          type: array
+                          items:
+                            type: string
+                          example: ["Retail", "EPCS"]
+                        ServiceLevel:
+                          type: integer
+                          example: 2075
+                        Latitude:
+                          type: number
+                          format: float
+                          example: 34.984127
+                        Longitude:
+                          type: number
+                          format: float
+                          example: -81.95771
+                        NCPDPID:
+                          type: string
+                          example: "0000250"                                                                                                     
+components:
+  securitySchemes:
+    X-Access-Token:
+      type: apiKey
+      in: header
+      name: X-Access-Token
+      description: The authentication token to be validated.
