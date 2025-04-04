@@ -1,7 +1,8 @@
 openapi: 3.0.0
 info:
   title: Ola Portal API
-  description: API documentation Ola Portal
+  description: |
+    The Ola Portal API provides a comprehensive suite of endpoints for managing authentication, provider operations, consultations, patient profiles, and pharmacy-related tasks. It is designed to facilitate seamless integration with telehealth services, ensuring secure and efficient data exchange. This documentation outlines the available endpoints, their usage, and expected responses for developers.
   version: 1.0.0
 servers:
   - url: https://dev-api.ola-digital-int.com
@@ -10,31 +11,23 @@ servers:
 tags:
   - name: Authentication
     description: |
-      Public endpoints used for generating authentication tokens for secured APIs 
-      and validating existing tokens.
-  
+      Endpoints dedicated to managing authentication processes, including generating and validating tokens for secure API access. These ensure robust security for all interactions.
+
   - name: Provider
     description: |
-      Public endpoints for provider-related operations, including authentication 
-      and token validation for accessing secured APIs.
+      Endpoints focused on provider-related operations, such as managing schedules and accessing secured APIs. These facilitate seamless provider interactions within the telehealth ecosystem.
 
   - name: Consult
     description: |
-      Public endpoints related to consultations, including authentication 
-      and token validation for secured API access.
+      Endpoints designed for managing consultations, including scheduling and retrieving appointment details. These ensure efficient handling of telehealth consultations.
 
   - name: Patient
     description: |
-      Public endpoints for patient-related operations, including authentication 
-      and token validation for secured APIs.
+      Endpoints for managing patient-related operations, such as updating profiles and accessing secured APIs. These enhance patient data management and interaction.
 
   - name: Pharmacy
     description: |
-      Public endpoints for pharmacy-related operations, including authentication 
-      and token validation for secured APIs.
-
-
-
+      Endpoints for handling pharmacy-related operations, including searching for pharmacies and managing pharmacy data. These support efficient pharmacy integration within telehealth services.
 
 paths:
   /auth/tennant/login:
@@ -42,7 +35,8 @@ paths:
       summary: Tenant Authentication
       tags:
         - Authentication
-      description: "*Authenticates a tenant and returns an authentication token.*"
+      description: |
+        Authenticates a tenant and returns an authentication token. This token is required for accessing secured APIs and is valid for 30 minutes.
       requestBody:
         required: true
         content:
@@ -63,7 +57,7 @@ paths:
                   example: ead307a1-xxxx-xxxx-xxxx-4da01f24be3c
       responses:
         "200":
-          description: Successful authentication.
+          description: Authentication successful. Returns a valid token.
           content:
             application/json:
               schema:
@@ -98,9 +92,10 @@ paths:
       summary: Validate Token
       tags:
         - Authentication
-      description: "*Validates an authentication token.*"
+      description: |
+        Validates an authentication token to ensure it is active and not expired. This endpoint is essential for maintaining secure access to APIs.
       security:
-        - X-Access-Token: []   # The custom x-access-token security Scheme
+        - X-Access-Token: []
       responses:
         "200":
           description: Token is valid.
@@ -133,7 +128,8 @@ paths:
       summary: Get Provider Schedules
       tags:
         - Provider 
-      description: Retrieves available provider schedules.
+      description: |
+        Retrieves available provider schedules based on the specified state and service ID. This endpoint helps in scheduling appointments efficiently.
       security:
         - X-Access-Token: []
       parameters:
@@ -142,13 +138,13 @@ paths:
           required: true
           schema:
             type: string
-          description: Provide your state.
+          description: The state for which provider schedules are to be retrieved.
         - in: path
           name: service_id
           required: true
           schema:
             type: string
-          description: Sheet number identifier.
+          description: The identifier for the service.
       responses:
         "200":
           description: Schedules retrieved successfully.
