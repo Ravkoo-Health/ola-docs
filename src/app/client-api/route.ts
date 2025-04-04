@@ -4,9 +4,9 @@ import {
 } from "@scalar/nextjs-api-reference";
 
 const config: ApiReferenceOptions = {
-  theme: "default",
-  forceDarkModeState: "light",
-  hideDarkModeToggle: true,
+  theme: "elysiajs",
+  darkMode: true,
+  favicon: "https://oladigital.health/wp-content/uploads/favicon.png",
   metaData:{
     title: "Ola MD Client API",
     description: "Client API description",
