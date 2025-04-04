@@ -128,7 +128,7 @@ paths:
                   message:
                     type: string
                     example: Token is expired.
-  /api-v2/telehealth/schedules/get-provider-schedules/{state}/service/{sheet_number}/{ServiceId}:
+  /api-v2/telehealth/schedules/get-provider-schedules/{state}/service/{service_id}:
     get:
       summary: Get Provider Schedules
       tags:
@@ -144,17 +144,11 @@ paths:
             type: string
           description: Provide your state.
         - in: path
-          name: sheet_number
+          name: service_id
           required: true
           schema:
             type: string
           description: Sheet number identifier.
-        - in: path
-          name: ServiceId
-          required: true
-          schema:
-            type: string
-          description: The service ID.
       responses:
         "200":
           description: Schedules retrieved successfully.
@@ -590,7 +584,7 @@ paths:
                     type: string
                     example: The order with the given GUID was not found. 
   /api-v2/telehealth/user/update-profile/{user_uuid}:
-    put:
+    post:
       summary: Update User Profile
       tags:
         - Patient
